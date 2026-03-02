@@ -3,25 +3,19 @@
 @tailwind utilities;
 
 :root {
-  --foreground-rgb: 0, 0, 0;
-  --background-start-rgb: 214, 219, 220;
-  --background-end-rgb: 255, 255, 255;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --foreground-rgb: 255, 255, 255;
-    --background-start-rgb: 0, 0, 0;
-    --background-end-rgb: 0, 0, 0;
-  }
+  --gradient-accent: linear-gradient(to right, #6366f1, #8b5cf6);
+  --gradient-accent-hover: linear-gradient(to right, #4f46e5, #7c3aed);
 }
 
 body {
-  color: rgb(var(--foreground-rgb));
-  background: linear-gradient(
-      to bottom,
-      transparent,
-      rgb(var(--background-end-rgb))
-    )
-    rgb(var(--background-start-rgb));
+  @apply bg-gray-50 text-gray-900 antialiased;
+}
+
+@layer utilities {
+  .gradient-accent {
+    background: var(--gradient-accent);
+  }
+  .gradient-accent-hover:hover {
+    background: var(--gradient-accent-hover);
+  }
 }
