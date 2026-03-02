@@ -64,11 +64,11 @@ function aggregateMultipleChoice(
       if (counts[opt] !== undefined) counts[opt]++;
     }
   }
-  const total = responses.length;
+  const totalVotes = Object.values(counts).reduce((a, b) => a + b, 0);
   return options.map((opt) => ({
     option: opt,
     count: counts[opt] ?? 0,
-    percentage: total > 0 ? Math.round(((counts[opt] ?? 0) / total) * 100) : 0,
+    percentage: totalVotes > 0 ? Math.round(((counts[opt] ?? 0) / totalVotes) * 100) : 0,
   }));
 }
 
@@ -78,7 +78,7 @@ function DisplayStandby() {
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-gray-50 to-indigo-50 px-8">
-      <h1 className="text-5xl font-bold text-gray-900">LocalAngle Poll</h1>
+      <h1 className="text-5xl font-bold text-gray-900">Navigating the Hype Cycle</h1>
       <p className="mt-4 text-2xl text-gray-600">Waiting for the next question</p>
       <div className="mt-12 rounded-2xl border border-gray-200 bg-white p-8">
         {mounted ? (
@@ -137,10 +137,10 @@ export default function DisplayPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="mx-auto max-w-6xl px-8 py-12">
-        <h2 className="mb-2 text-center text-4xl font-bold text-gray-900 md:text-5xl">
+        <h2 className="mb-8 text-center text-4xl font-bold text-gray-900 md:text-5xl">
           {question.question_text}
         </h2>
-        <div className="mb-2 h-1 w-24 mx-auto rounded-full bg-gradient-to-r from-indigo-500 to-violet-500" />
+        <div className="mb-12 h-1 w-32 mx-auto rounded-full bg-gradient-to-r from-indigo-500 to-violet-500" />
 
         <div className="mt-12">
           {question.question_type === "numeric" && (

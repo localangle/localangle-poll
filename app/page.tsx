@@ -11,10 +11,10 @@ export default function Home() {
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-gray-50 via-white to-indigo-50 px-6">
       <h1 className="text-4xl font-bold text-gray-900 md:text-5xl">
-        LocalAngle Poll
+        Navigating the Hype Cycle
       </h1>
       <p className="mt-4 text-lg text-gray-600">
-        Live conference polling — share your feedback in real time
+        An NPA/RJI discussion. Scan the QR code to begin.
       </p>
 
       <Link
@@ -36,9 +36,6 @@ export default function Home() {
       </div>
 
       <div className="mt-12 flex gap-6 text-sm">
-        <Link href="/admin" className="text-indigo-600 hover:underline">
-          Admin
-        </Link>
         <Link href="/display" className="text-indigo-600 hover:underline">
           Display
         </Link>

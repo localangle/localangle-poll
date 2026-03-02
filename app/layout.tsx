@@ -4,8 +4,8 @@ import { Inter } from 'next/font/google'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata = {
-  title: 'LocalAngle Poll',
-  description: 'Live conference polling - join the poll and share your feedback in real time.',
+  title: 'Navigating the Hype Cycle',
+  description: 'An NPA/RJI discussion. Scan the QR code to begin.',
 }
 
 export default function RootLayout({

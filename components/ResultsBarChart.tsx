@@ -1,13 +1,6 @@
 "use client";
 
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  ResponsiveContainer,
-  Cell,
-} from "recharts";
+import { motion } from "framer-motion";
 
 interface ResultsBarChartProps {
   options: string[];
@@ -24,61 +17,30 @@ export function ResultsBarChart({ options, data }: ResultsBarChartProps) {
     };
   });
 
-  const maxCount = Math.max(...chartData.map((d) => d.count), 1);
+  const totalVotes = chartData.reduce((sum, d) => sum + d.count, 0);
 
   return (
-    <div className="h-96 w-full">
-      <ResponsiveContainer width="100%" height="100%">
-        <BarChart
-          data={chartData}
-          layout="vertical"
-          margin={{ top: 10, right: 30, left: 20, bottom: 10 }}
-        >
-          <XAxis type="number" domain={[0, maxCount]} hide />
-          <YAxis
-            type="category"
-            dataKey="option"
-            width={200}
-            tick={{ fontSize: 22, fill: "#374151" }}
-            axisLine={false}
-            tickLine={false}
-          />
-          <Bar
-            dataKey="count"
-            radius={[0, 8, 8, 0]}
-            maxBarSize={56}
-            animationDuration={500}
-            animationEasing="ease-out"
-          >
-            {chartData.map((entry, i) => (
-              <Cell
-                key={entry.option}
-                fill={
-                  entry.count > 0
-                    ? "url(#barChartGradient)"
-                    : "rgba(229, 231, 235, 0.5)"
-                }
+    <div className="space-y-5">
+      {chartData.map((d) => (
+        <div key={d.option}>
+          <div className="mb-2 text-xl font-medium text-gray-900">
+            {d.option}
+          </div>
+          <div className="flex items-center gap-4">
+            <div className="relative h-12 flex-1 overflow-hidden rounded-lg bg-gray-200">
+              <motion.div
+                className="h-full rounded-lg bg-gradient-to-r from-indigo-500 to-violet-500"
+                initial={{ width: 0 }}
+                animate={{ width: totalVotes > 0 ? `${(d.count / totalVotes) * 100}%` : "0%" }}
+                transition={{ duration: 0.5, ease: "easeOut" }}
               />
-            ))}
-          </Bar>
-          <defs>
-            <linearGradient id="barChartGradient" x1="0" y1="0" x2="1" y2="0">
-              <stop offset="0%" stopColor="#6366f1" />
-              <stop offset="100%" stopColor="#8b5cf6" />
-            </linearGradient>
-          </defs>
-        </BarChart>
-      </ResponsiveContainer>
-      <div className="mt-4 space-y-2">
-        {chartData.map((d) => (
-          <div key={d.option} className="flex items-center justify-between text-lg">
-            <span className="font-medium text-gray-900">{d.option}</span>
-            <span className="text-indigo-600">
+            </div>
+            <span className="w-24 shrink-0 text-right text-xl font-medium text-indigo-600">
               {d.count} ({d.percentage}%)
             </span>
           </div>
-        ))}
-      </div>
+        </div>
+      ))}
     </div>
   );
 }

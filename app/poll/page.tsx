@@ -113,7 +113,7 @@ export default function PollPage() {
       <div className="min-h-screen bg-gray-50">
         <header className="border-b border-gray-200 bg-white px-4 py-3">
           <Link href="/" className="text-lg font-semibold text-gray-900">
-            LocalAngle Poll
+            Navigating the Hype Cycle
           </Link>
         </header>
         <WaitingScreen />
@@ -127,7 +127,7 @@ export default function PollPage() {
       <div className="min-h-screen bg-gray-50">
         <header className="border-b border-gray-200 bg-white px-4 py-3">
           <Link href="/" className="text-lg font-semibold text-gray-900">
-            LocalAngle Poll
+            Navigating the Hype Cycle
           </Link>
         </header>
         <div className="flex min-h-[60vh] flex-col items-center justify-center px-6">
@@ -147,7 +147,7 @@ export default function PollPage() {
     <div className="min-h-screen bg-gray-50">
       <header className="border-b border-gray-200 bg-white px-4 py-3">
         <Link href="/" className="text-lg font-semibold text-gray-900">
-          LocalAngle Poll
+          Navigating the Hype Cycle
         </Link>
       </header>
       <main className="mx-auto max-w-lg px-4 py-8">

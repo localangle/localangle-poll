@@ -69,14 +69,6 @@ export function Histogram({ data }: HistogramProps) {
           </defs>
         </BarChart>
       </ResponsiveContainer>
-      <div className="mt-4 flex justify-center gap-4">
-        {chartData.map((d) => (
-          <div key={d.value} className="text-center">
-            <span className="block text-2xl font-bold text-indigo-600">{d.count}</span>
-            <span className="text-sm text-gray-500">{d.value}</span>
-          </div>
-        ))}
-      </div>
     </div>
   );
 }
