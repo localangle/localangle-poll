@@ -1,5 +1,10 @@
 import json
 import os
+import sys
+
+# Ensure api directory is on path for serverless (e.g. Vercel)
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 
