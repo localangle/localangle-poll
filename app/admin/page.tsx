@@ -100,6 +100,14 @@ function AdminContent() {
     if (res.ok) fetchQuestions();
   };
 
+  const duplicateQuestion = async (id: number) => {
+    const res = await fetch(`/api/admin/questions/${id}/duplicate`, {
+      method: "POST",
+      headers: getAdminHeaders(),
+    });
+    if (res.ok) fetchQuestions();
+  };
+
   const openEdit = (q: Question) => {
     setEditingId(q.id);
     setFormOpen(true);
@@ -218,6 +226,13 @@ function AdminContent() {
                         }`}
                       >
                         {q.is_active ? "Active" : "Activate"}
+                      </button>
+                      <button
+                        onClick={() => duplicateQuestion(q.id)}
+                        className="rounded-lg px-2 py-1.5 text-xs font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-700"
+                        aria-label="Duplicate"
+                      >
+                        Duplicate
                       </button>
                       <button
                         onClick={() => openEdit(q)}

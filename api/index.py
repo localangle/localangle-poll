@@ -5,6 +5,11 @@ import sys
 # Ensure api directory is on path for serverless (e.g. Vercel)
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
+# Load .env from project root (parent of api/)
+from dotenv import load_dotenv
+_load_path = os.path.join(os.path.dirname(__file__), "..", ".env")
+load_dotenv(_load_path)
+
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 
@@ -61,11 +66,13 @@ def verify_pin():
 @require_admin_pin
 def list_questions():
     conn = get_db()
-    rows = conn.execute(
+    cur = conn.cursor()
+    cur.execute(
         "SELECT q.*, COUNT(r.id) as response_count FROM questions q "
         "LEFT JOIN responses r ON q.id = r.question_id "
         "GROUP BY q.id ORDER BY q.display_order, q.id"
-    ).fetchall()
+    )
+    rows = cur.fetchall()
     conn.close()
     questions = []
     for row in rows:
@@ -94,18 +101,43 @@ def create_question():
         options = json.dumps(opts)
 
     conn = get_db()
-    max_order = conn.execute("SELECT COALESCE(MAX(display_order), -1) FROM questions").fetchone()[0]
+    cur = conn.cursor()
+    cur.execute("SELECT COALESCE(MAX(display_order), -1) AS max_order FROM questions")
+    max_order = cur.fetchone()["max_order"]
     display_order = data.get("display_order", max_order + 1)
 
-    cursor = conn.execute(
-        "INSERT INTO questions (question_text, question_type, options, display_order) VALUES (?, ?, ?, ?)",
+    cur.execute(
+        "INSERT INTO questions (question_text, question_type, options, display_order) VALUES (%s, %s, %s, %s) RETURNING id",
         (data["question_text"], qtype, options, display_order),
     )
+    qid = cur.fetchone()["id"]
     conn.commit()
-    qid = cursor.lastrowid
     conn.close()
 
     return jsonify({"id": qid, "message": "Created"}), 201
+
+
+@app.route("/api/admin/questions/<int:qid>/duplicate", methods=["POST"])
+@require_admin_pin
+def duplicate_question(qid):
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute("SELECT question_text, question_type, options, display_order FROM questions WHERE id=%s", (qid,))
+    row = cur.fetchone()
+    if not row:
+        conn.close()
+        return jsonify({"error": "Question not found"}), 404
+
+    cur.execute("SELECT COALESCE(MAX(display_order), -1) AS max_order FROM questions")
+    max_order = cur.fetchone()["max_order"]
+    cur.execute(
+        "INSERT INTO questions (question_text, question_type, options, display_order) VALUES (%s, %s, %s, %s) RETURNING id",
+        (row["question_text"], row["question_type"], row["options"], max_order + 1),
+    )
+    new_id = cur.fetchone()["id"]
+    conn.commit()
+    conn.close()
+    return jsonify({"id": new_id, "message": "Duplicated"}), 201
 
 
 @app.route("/api/admin/questions/<int:qid>", methods=["PUT"])
@@ -116,7 +148,9 @@ def update_question(qid):
         return jsonify({"error": "No data"}), 400
 
     conn = get_db()
-    existing = conn.execute("SELECT * FROM questions WHERE id=?", (qid,)).fetchone()
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM questions WHERE id=%s", (qid,))
+    existing = cur.fetchone()
     if not existing:
         conn.close()
         return jsonify({"error": "Question not found"}), 404
@@ -132,8 +166,8 @@ def update_question(qid):
     else:
         options = None
 
-    conn.execute(
-        "UPDATE questions SET question_text=?, question_type=?, options=? WHERE id=?",
+    cur.execute(
+        "UPDATE questions SET question_text=%s, question_type=%s, options=%s WHERE id=%s",
         (question_text, question_type, options, qid),
     )
     conn.commit()
@@ -145,7 +179,8 @@ def update_question(qid):
 @require_admin_pin
 def delete_question(qid):
     conn = get_db()
-    conn.execute("DELETE FROM questions WHERE id=?", (qid,))
+    cur = conn.cursor()
+    cur.execute("DELETE FROM questions WHERE id=%s", (qid,))
     conn.commit()
     conn.close()
     return jsonify({"ok": True}), 200
@@ -155,8 +190,9 @@ def delete_question(qid):
 @require_admin_pin
 def activate_question(qid):
     conn = get_db()
-    conn.execute("UPDATE questions SET is_active=0")
-    conn.execute("UPDATE questions SET is_active=1 WHERE id=?", (qid,))
+    cur = conn.cursor()
+    cur.execute("UPDATE questions SET is_active=FALSE")
+    cur.execute("UPDATE questions SET is_active=TRUE WHERE id=%s", (qid,))
     conn.commit()
     conn.close()
     return jsonify({"ok": True}), 200
@@ -166,7 +202,8 @@ def activate_question(qid):
 @require_admin_pin
 def deactivate():
     conn = get_db()
-    conn.execute("UPDATE questions SET is_active=0")
+    cur = conn.cursor()
+    cur.execute("UPDATE questions SET is_active=FALSE")
     conn.commit()
     conn.close()
     return jsonify({"ok": True}), 200
@@ -180,8 +217,9 @@ def reorder_questions():
         return jsonify({"error": "order array required"}), 400
 
     conn = get_db()
+    cur = conn.cursor()
     for i, qid in enumerate(data["order"]):
-        conn.execute("UPDATE questions SET display_order=? WHERE id=?", (i, qid))
+        cur.execute("UPDATE questions SET display_order=%s WHERE id=%s", (i, qid))
     conn.commit()
     conn.close()
     return jsonify({"ok": True}), 200
@@ -192,9 +230,9 @@ def reorder_questions():
 @app.route("/api/current", methods=["GET"])
 def current_question():
     conn = get_db()
-    row = conn.execute(
-        "SELECT * FROM questions WHERE is_active=1 LIMIT 1"
-    ).fetchone()
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM questions WHERE is_active=TRUE LIMIT 1")
+    row = cur.fetchone()
     conn.close()
     return jsonify({"question": question_to_json(row)})
 
@@ -210,19 +248,21 @@ def respond():
     respondent_id = data["respondent_id"]
 
     conn = get_db()
-    active = conn.execute("SELECT id FROM questions WHERE is_active=1 AND id=?", (qid,)).fetchone()
+    cur = conn.cursor()
+    cur.execute("SELECT id FROM questions WHERE is_active=TRUE AND id=%s", (qid,))
+    active = cur.fetchone()
     if not active:
         conn.close()
         return jsonify({"error": "Question not active"}), 400
 
     try:
-        conn.execute(
-            "INSERT INTO responses (question_id, response_value, respondent_id) VALUES (?, ?, ?)",
+        cur.execute(
+            "INSERT INTO responses (question_id, response_value, respondent_id) VALUES (%s, %s, %s)",
             (qid, value if isinstance(value, str) else json.dumps(value), respondent_id),
         )
         conn.commit()
     except Exception as e:
-        if "UNIQUE" in str(e):
+        if "unique" in str(e).lower() or "duplicate" in str(e).lower():
             conn.close()
             return jsonify({"error": "Already responded"}), 409
         raise
@@ -235,18 +275,19 @@ def respond():
 @app.route("/api/results", methods=["GET"])
 def results():
     conn = get_db()
-    row = conn.execute(
-        "SELECT * FROM questions WHERE is_active=1 LIMIT 1"
-    ).fetchone()
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM questions WHERE is_active=TRUE LIMIT 1")
+    row = cur.fetchone()
     if not row:
         conn.close()
         return jsonify({"question": None, "responses": []})
 
     question = question_to_json(row)
-    responses_rows = conn.execute(
-        "SELECT id, response_value, created_at FROM responses WHERE question_id=? ORDER BY created_at",
+    cur.execute(
+        "SELECT id, response_value, created_at FROM responses WHERE question_id=%s ORDER BY created_at",
         (row["id"],),
-    ).fetchall()
+    )
+    responses_rows = cur.fetchall()
     conn.close()
 
     responses = [
