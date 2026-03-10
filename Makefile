@@ -9,3 +9,6 @@ clear-responses:
 
 simulate:
 	python3 scripts/simulate.py --users $(USERS) --base-url $(BASE_URL)
+
+simulate-remote:
+	python3 scripts/simulate.py --users $(USERS) --remote

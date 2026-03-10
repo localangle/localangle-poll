@@ -194,14 +194,25 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Simulate poll respondents")
     parser.add_argument("--users", type=int, default=10, help="Number of simulated users")
     parser.add_argument("--base-url", type=str, default="http://localhost:3001", help="API base URL")
+    parser.add_argument("--remote", action="store_true", help="Use DEPLOY_URL from .env (deployed instance)")
     args = parser.parse_args()
+
+    base_url = args.base_url
+    if args.remote:
+        from dotenv import load_dotenv
+        load_dotenv()
+        base_url = os.environ.get("DEPLOY_URL") or os.environ.get("BASE_URL")
+        if not base_url:
+            print("Error: DEPLOY_URL or BASE_URL must be set in .env when using --remote", file=sys.stderr)
+            sys.exit(1)
+        print(f"[simulate] Using remote URL from .env")
 
     llm_available = OPENAI_AVAILABLE
     if not llm_available:
         print("[simulate] openai package not installed, using fallback mode", file=sys.stderr)
 
     try:
-        run_simulation(args.base_url, args.users, llm_available)
+        run_simulation(base_url, args.users, llm_available)
     except KeyboardInterrupt:
         print("\n[simulate] Stopped")
 
