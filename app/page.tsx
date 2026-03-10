@@ -9,6 +9,7 @@ export default function Home() {
   useEffect(() => setMounted(true), []);
 
   const qrSize = 420;
+  const pollUrl = process.env.NEXT_PUBLIC_POLL_URL ?? (mounted ? `${window.location.origin}/poll` : "");
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-gray-50 via-white to-indigo-50 px-6">
@@ -49,7 +50,7 @@ export default function Home() {
             Scan to join
           </p>
           {mounted ? (
-            <QRCodeSVG value={window.location.origin} size={qrSize} level="M" includeMargin />
+            <QRCodeSVG value={pollUrl} size={qrSize} level="M" includeMargin />
           ) : (
             <div className="animate-pulse rounded bg-gray-100" style={{ height: qrSize, width: qrSize }} aria-hidden />
           )}

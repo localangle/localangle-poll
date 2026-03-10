@@ -8,7 +8,9 @@ export function QRCodePanel() {
   const [copied, setCopied] = useState(false);
   useEffect(() => setMounted(true), []);
 
-  const url = mounted ? window.location.origin : "";
+  const url = mounted
+    ? (process.env.NEXT_PUBLIC_POLL_URL ?? `${window.location.origin}/poll`)
+    : "";
 
   const copyUrl = async () => {
     try {

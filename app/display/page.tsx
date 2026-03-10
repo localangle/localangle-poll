@@ -82,7 +82,11 @@ function DisplayStandby() {
       <p className="mt-4 text-2xl text-gray-600">Waiting for the next question</p>
       <div className="mt-12 rounded-2xl border border-gray-200 bg-white p-8">
         {mounted ? (
-          <QRCodeSVG value={window.location.origin} size={200} level="M" />
+          <QRCodeSVG
+            value={process.env.NEXT_PUBLIC_POLL_URL ?? `${window.location.origin}/poll`}
+            size={200}
+            level="M"
+          />
         ) : (
           <div className="h-[200px] w-[200px] animate-pulse rounded bg-gray-100" aria-hidden />
         )}
